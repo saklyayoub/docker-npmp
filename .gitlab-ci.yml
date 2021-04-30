@@ -1,0 +1,19 @@
+stages:
+  - testing
+deploy-project:
+  stage: testing
+  only:
+    - dev
+  before_script:
+    - docker-compose down -v || true
+    - docker-compose build --no-cache
+    - chown -R www-data:www-data ./web/public/*
+    - find ./web/public -type f -exec chmod 0664 {} \;
+    - find ./web/public -type d -exec chmod 0775 {} \;    
+  script:
+    - docker-compose up -d
+    - docker exec $(docker-compose ps -q php) php ./app/vendor/bin/phpcbf -v --standard=PSR2 ./public || true
+    - docker exec $(docker-compose ps -q php) php ./app/vendor/bin/phpcs -v --standard=PSR2 ./public || true
+    - docker exec $(docker-compose ps -q php) php ./app/vendor/bin/phpmd ./public text cleancode,codesize,controversial,design,naming,unusedcode || true
+    - sleep 10m
+    - docker-compose down -v
