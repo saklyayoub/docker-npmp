@@ -97,6 +97,11 @@ cd docker-nginx-php-mysql
 │   └── ssl
 ├── README.md
 └── web
+    ├── mysql
+    |   ├── backups
+    |   |   └── sample.sql
+    |   └── init
+    |       └── sample.sql
     ├── app
     │   ├── composer.json
     │   ├── composer.json.dist
@@ -125,17 +130,6 @@ If you modify the host name, do not forget to add it to the `/etc/hosts` file.
 
     Do not modify the `etc/nginx/default.conf` file, it is overwritten by  `etc/nginx/default.template.conf`
 
-    Edit nginx file `etc/nginx/default.template.conf` and uncomment the SSL server section :
-
-    ```sh
-    # server {
-    #     server_name ${NGINX_HOST};
-    #
-    #     listen 443 ssl;
-    #     fastcgi_param HTTPS on;
-    #     ...
-    # }
-    ```
 ## Run the application
 
 1. Copying the composer configuration file : 
@@ -156,13 +150,7 @@ If you modify the host name, do not forget to add it to the `/etc/hosts` file.
     docker-compose logs -f # Follow log output
     ```
 
-3. Open your favorite browser :
-
-    * [http://localhost]](http://localhost/)
-    * [https://localhost:3000](https://localhost:3000/) ([HTTPS](#configure-nginx-with-ssl-certificates) not configured by default)
-    * [http://localhost:8080](http://localhost:8080/) PHPMyAdmin (username: dev, password: dev)
-
-4. Stop and clear services
+3. Stop and clear services
 
     ```sh
     docker-compose down -v
@@ -239,13 +227,13 @@ mkdir -p data/db/dumps
 ```
 
 ```sh
-source .env && docker exec $(docker-compose ps -q mysqldb) mysqldump --all-databases -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" > "data/db/dumps/db.sql"
+source .env && docker exec $(docker-compose ps -q mysql) mysqldump --all-databases -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" > "/web/mysql/backups/db.sql"
 ```
 
 #### Restoring a backup of all databases
 
 ```sh
-source .env && docker exec -i $(docker-compose ps -q mysqldb) mysql -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" < "data/db/dumps/db.sql"
+source .env && docker exec -i $(docker-compose ps -q mysql) mysql -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" < "/web/mysql/backups/db.sql"
 ```
 
 #### Creating a backup of single database
@@ -253,11 +241,11 @@ source .env && docker exec -i $(docker-compose ps -q mysqldb) mysql -u"$MYSQL_RO
 **`Notice:`** Replace "YOUR_DB_NAME" by your custom name.
 
 ```sh
-source .env && docker exec $(docker-compose ps -q mysqldb) mysqldump -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" --databases YOUR_DB_NAME > "data/db/dumps/YOUR_DB_NAME_dump.sql"
+source .env && docker exec $(docker-compose ps -q mysql) mysqldump -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" --databases YOUR_DB_NAME > "/web/mysql/backups/YOUR_DB_NAME_dump.sql"
 ```
 
 #### Restoring a backup of single database
 
 ```sh
-source .env && docker exec -i $(docker-compose ps -q mysqldb) mysql -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" < "data/db/dumps/YOUR_DB_NAME_dump.sql"
+source .env && docker exec -i $(docker-compose ps -q mysql) mysql -u"$MYSQL_ROOT_USER" -p"$MYSQL_ROOT_PASSWORD" < "/web/mysql/backups/YOUR_DB_NAME_dump.sql"
 ```
