@@ -55,6 +55,8 @@ services:
     restart: unless-stopped
     volumes: 
       - "mysqldata:/var/lib/mysql"
+      - "./web/mysql_init:/docker-entrypoint-initdb.d"
+      
 
   php: 
     build: 
